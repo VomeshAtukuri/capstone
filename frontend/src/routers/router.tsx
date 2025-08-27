@@ -1,38 +1,52 @@
-// src/routes.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { type JSX } from "react";
-
 import App from "@/App";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import ProductList from "@/pages/ProductList";
-import ProductDetails from "@/pages/ProductDetails";
+import Footer from "@/components/Footer";
+import AdminPage from "@/pages/Admin";
+import CartPage from "@/pages/Cart";
+import LoginPage from "@/pages/Login";
+import OrdersPage from "@/pages/Orders";
+import ProductDetailsPage from "@/pages/ProductDetails";
+import ProductsPage from "@/pages/Products";
+import RegisterPage from "@/pages/Register";
+import { type JSX } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 export default function AppRoutes(): JSX.Element {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-        <Route path="/" element={<App/>} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductDetailsPage />} />
 
-        <Route path="/products" element={<ProductList />} />
-        <Route path="/products/:id" element={<ProductDetails />} />
-       
-        {/* <Route path="/cart" element={<Cart />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/cart" element={<CartPage />} />
+
+        {/* 
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/orders" element={<OrderHistory />} />
-
-        <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/products" element={<ManageProducts />} />
         <Route path="/admin/orders" element={<ManageOrders />} /> */}
+        <Route path="/admin/dashboard" element={<AdminPage />} />
 
         <Route
           path="*"
-          element={<h2 style={{ textAlign: "center" }}>404 - Page Not Found</h2>}
+          element={
+            <h2
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100vh",
+              }}
+            >
+              404 - Page Not Found
+            </h2>
+          }
         />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }

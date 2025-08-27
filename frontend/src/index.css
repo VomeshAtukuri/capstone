@@ -1,8 +1,8 @@
 :root {
-  --primary-color: #1d1d1d;       /* Dark background */
-  --secondary-color: #333333;     /* Navbar / Footer */
-  --tertiary-color: #4d4d4d;      /* Hover / Buttons */
-  --quaternary-color: #666666;    
+  --primary-color: #1d1d1d; /* Dark background */
+  --secondary-color: #333333; /* Navbar / Footer */
+  --tertiary-color: #4d4d4d; /* Hover / Buttons */
+  --quaternary-color: #666666;
 
   --text-light: #ffffff;
   --text-dark: #111111;

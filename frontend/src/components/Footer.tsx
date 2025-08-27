@@ -65,17 +65,31 @@ export default function Footer() {
 
         {/* Middle Section */}
         <div style={styles.links}>
-          <a href="#home" style={styles.link}>Home</a>
-          <a href="#about" style={styles.link}>About</a>
-          <a href="#contact" style={styles.link}>Contact</a>
-          <a href="#privacy" style={styles.link}>Privacy Policy</a>
+          <a href="#home" style={styles.link}>
+            Home
+          </a>
+          <a href="#about" style={styles.link}>
+            About
+          </a>
+          <a href="#contact" style={styles.link}>
+            Contact
+          </a>
+          <a href="#privacy" style={styles.link}>
+            Privacy Policy
+          </a>
         </div>
 
         {/* Right Section */}
         <div style={styles.social}>
-          <a href="https://facebook.com" style={styles.socialLink}>🌐</a>
-          <a href="https://twitter.com" style={styles.socialLink}>🐦</a>
-          <a href="https://instagram.com" style={styles.socialLink}>📸</a>
+          <a href="https://facebook.com" style={styles.socialLink}>
+            🌐
+          </a>
+          <a href="https://twitter.com" style={styles.socialLink}>
+            🐦
+          </a>
+          <a href="https://instagram.com" style={styles.socialLink}>
+            📸
+          </a>
         </div>
       </div>
     </footer>
