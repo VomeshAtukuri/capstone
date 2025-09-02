@@ -1,182 +1,110 @@
-"use client";
-
 import type React from "react";
 import { useState } from "react";
-import { Link } from "react-router";
-// import { useRouters } from "react-router"
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Login } from "@/services/login";
+import { useAuth } from "@/context/auth-context"; 
+import { toast } from "sonner";
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
-  // const router = useRouters()
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData((s) => ({ ...s, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email || !formData.password) return;
+
     setIsLoading(true);
+    setError(null);
 
-    // Mock authentication - simulate API call
-    setTimeout(() => {
-      alert("Login successful! (Mock authentication)");
+    try {
+      const response = await Login(formData);
+      if (response?.token) {
+        login(response.token, response.role);
+        toast.success("Login successful!");
+        navigate("/");
+      } else {
+        setError("Email or password is wrong");
+      }
+    } catch {
+      setError("Email or password is wrong");
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 1000);
-  };
-
-  const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    backgroundColor: "var(--color-background)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2rem 1rem",
-  };
-
-  const containerStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-card)",
-    borderRadius: "var(--radius-lg)",
-    padding: "3rem",
-    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-    width: "100%",
-    maxWidth: "400px",
-  };
-
-  const headerStyle: React.CSSProperties = {
-    textAlign: "center",
-    marginBottom: "2rem",
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: "2rem",
-    fontWeight: "bold",
-    color: "var(--color-foreground)",
-    marginBottom: "0.5rem",
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    color: "var(--color-muted-foreground)",
-    fontSize: "1rem",
-  };
-
-  const formStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1.5rem",
-  };
-
-  const inputGroupStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.5rem",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: "0.875rem",
-    fontWeight: "500",
-    color: "var(--color-foreground)",
-  };
-
-  const inputStyle: React.CSSProperties = {
-    padding: "0.75rem",
-    border: "1px solid var(--color-border)",
-    borderRadius: "var(--radius-md)",
-    fontSize: "1rem",
-    backgroundColor: "var(--color-input)",
-    transition: "border-color 0.2s ease",
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-primary)",
-    color: "var(--color-primary-foreground)",
-    border: "none",
-    padding: "0.875rem 1.5rem",
-    fontSize: "1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    fontWeight: "600",
-    transition: "opacity 0.2s ease",
-    opacity: isLoading ? 0.7 : 1,
-  };
-
-  const linkSectionStyle: React.CSSProperties = {
-    textAlign: "center",
-    marginTop: "2rem",
-    paddingTop: "2rem",
-    borderTop: "1px solid var(--color-border)",
-  };
-
-  const linkStyle: React.CSSProperties = {
-    color: "var(--color-primary)",
-    textDecoration: "none",
-    fontWeight: "500",
-  };
-
-  const backLinkStyle: React.CSSProperties = {
-    display: "inline-block",
-    marginBottom: "2rem",
-    color: "var(--color-muted-foreground)",
-    textDecoration: "none",
-    fontSize: "0.875rem",
+    }
   };
 
   return (
-    <div style={pageStyle}>
-      <div style={containerStyle}>
-        <Link to="/" style={backLinkStyle}>
-          ← Back to Home
+    <div className="min-h-[calc(100vh-64px)] bg-background px-4 py-10">
+      <div className="mx-auto w-full max-w-md rounded-xl bg-card p-8 shadow">
+        <Link
+          to="/"
+          className="mb-6 inline-block text-sm text-muted-foreground hover:text-foreground"
+        >
+          ← Back
         </Link>
 
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>Welcome Back</h1>
-          <p style={subtitleStyle}>Sign in to your ShopHub account</p>
-        </div>
+        <header className="mb-8 text-center">
+          <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
+          <p className="text-sm text-muted-foreground">
+            Sign in to your ShopHub account
+          </p>
+        </header>
 
-        <form style={formStyle} onSubmit={handleSubmit}>
-          <div style={inputGroupStyle}>
-            <label style={labelStyle}>Email Address</label>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Email Address
+            </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
-              style={inputStyle}
               placeholder="Enter your email"
               required
+              className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm outline-none ring-ring/0 focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          <div style={inputGroupStyle}>
-            <label style={labelStyle}>Password</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Password
+            </label>
             <input
               type="password"
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
-              style={inputStyle}
               placeholder="Enter your password"
               required
+              className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm outline-none ring-ring/0 focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          <button type="submit" style={buttonStyle} disabled={isLoading}>
+          {error && (
+            <p className="text-sm text-red-600 font-medium">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+          >
             {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
-        <div style={linkSectionStyle}>
-          <p
-            style={{
-              color: "var(--color-muted-foreground)",
-              marginBottom: "0.5rem",
-            }}
-          >
+        <div className="mt-8 border-t border-border pt-6 text-center">
+          <p className="mb-2 text-sm text-muted-foreground">
             Don't have an account?
           </p>
-          <Link to="/register" style={linkStyle}>
+          <Link
+            to="/register"
+            className="text-sm font-medium text-emerald-700 hover:underline"
+          >
             Create Account
           </Link>
         </div>

@@ -1,175 +1,152 @@
-"use client";
-
-import type React from "react";
-import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/cart-context";
-
+import { useAuth } from "@/context/auth-context";
+import { toast } from "sonner";
+import { ShoppingCart } from "lucide-react";
 export default function Navigation() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { getTotalCartItems } = useCart();
+  const { isAuthenticated, role, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const navItems = [
-    { id: "home", label: "Home", href: "/" },
-    { id: "products", label: "Products", href: "/products" },
-    { id: "orders", label: "Orders", href: "/orders" },
-    { id: "about", label: "About", href: "/about" },
-    { id: "contact", label: "Contact", href: "/contact" },
-  ];
+  const { getTotalCartItems } = isAuthenticated
+    ? useCart()
+    : { getTotalCartItems: () => 0 };
 
-  const navStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-background)",
-    borderBottom: "1px solid var(--color-border)",
-    padding: "1rem 0",
-    position: "sticky",
-    top: 0,
-    zIndex: 1000,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  const handleLogout = () => {
+    logout();
+    toast.success("Logout successful!");
+    navigate("/login");
   };
 
-  const containerStyle: React.CSSProperties = {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "0 1rem",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  };
+  const baseLink = "rounded-md px-3 py-2 text-sm font-medium";
+  const activeLink = "text-blue-600 shadow-sm";
+  const inactiveLink = "text-gray-700 hover:bg-gray-100 hover:text-gray-900";
 
-  const logoStyle: React.CSSProperties = {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    color: "var(--color-primary)",
-    textDecoration: "none",
-  };
-
-  const navListStyle: React.CSSProperties = {
-    display: "flex",
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-    gap: "2rem",
-  };
-
-  const navItemStyle: React.CSSProperties = {
-    color: "var(--color-foreground)",
-    textDecoration: "none",
-    padding: "0.5rem 1rem",
-    borderRadius: "var(--radius-md)",
-    transition: "all 0.2s ease",
-  };
-
-  const rightSectionStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "1rem",
-  };
-
-  const authLinksStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-  };
-
-  const authLinkStyle: React.CSSProperties = {
-    color: "var(--color-foreground)",
-    textDecoration: "none",
-    padding: "0.5rem 1rem",
-    borderRadius: "var(--radius-md)",
-    fontSize: "0.875rem",
-    fontWeight: "500",
-  };
-  const cartBadgeStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-destructive)",
-    color: "var(--color-destructive-foreground)",
-    borderRadius: "50%",
-    width: "20px",
-    height: "20px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "0.75rem",
-    position: "absolute",
-    top: "-8px",
-    right: "-8px",
-  };
-  const loginButtonStyle: React.CSSProperties = {
-    ...authLinkStyle,
-    backgroundColor: "var(--color-secondary)",
-    color: "var(--color-secondary-foreground)",
-  };
-
-  const registerButtonStyle: React.CSSProperties = {
-    ...authLinkStyle,
-    backgroundColor: "var(--color-primary)",
-    color: "var(--color-primary-foreground)",
-  };
-
-  const cartButtonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-accent)",
-    color: "var(--color-accent-foreground)",
-    border: "none",
-    padding: "0.5rem 1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    textDecoration: "none",
-  };
-
-  const adminButtonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-secondary)",
-    color: "var(--color-secondary-foreground)",
-    border: "none",
-    padding: "0.5rem 1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    textDecoration: "none",
-    fontSize: "0.875rem",
-    fontWeight: "500",
+  const isActive = (href: string): boolean => {
+    return href === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(href);
   };
 
   return (
-    <nav style={navStyle}>
-      <div style={containerStyle}>
-        <Link to="/" style={logoStyle}>
-          ShopHub
+    <header className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-xl font-semibold text-gray-900"
+        >
+          <span>ShopHub</span>
         </Link>
 
-        <ul style={navListStyle}>
-          {navItems.map((item) => (
-            <li key={item.id}>
-              <Link to={item.href} style={navItemStyle}>
-                {item.label}
+        <nav className="hidden items-center gap-1 md:flex">
+          <Link
+            to="/"
+            className={[
+              baseLink,
+              isActive("/") ? activeLink : inactiveLink,
+            ].join(" ")}
+          >
+            Home
+          </Link>
+          <Link
+            to="/products"
+            className={[
+              baseLink,
+              isActive("/products") ? activeLink : inactiveLink,
+            ].join(" ")}
+          >
+            Products
+          </Link>
+
+          {isAuthenticated && (
+            <Link
+              to="/orders"
+              className={[
+                baseLink,
+                isActive("/orders") ? activeLink : inactiveLink,
+              ].join(" ")}
+            >
+              Orders
+            </Link>
+          )}
+
+          {role !== "Admin" && (
+            <>
+              <Link
+                to="/about-us"
+                className={[
+                  baseLink,
+                  isActive("/about-us") ? activeLink : inactiveLink,
+                ].join(" ")}
+              >
+                About
               </Link>
-            </li>
-          ))}
-        </ul>
+              <Link
+                to="/contact-us"
+                className={[
+                  baseLink,
+                  isActive("/contact-us") ? activeLink : inactiveLink,
+                ].join(" ")}
+              >
+                Contact
+              </Link>
+            </>
+          )}
 
-        <div style={rightSectionStyle}>
-          <div style={authLinksStyle}>
-            <Link to="/login" style={loginButtonStyle}>
-              Login
+          {role === "Admin" && (
+            <Link
+              to="/admin/dashboard"
+              className={[
+                baseLink,
+                isActive("/admin/dashboard") ? activeLink : inactiveLink,
+              ].join(" ")}
+            >
+              Admin Dashboard
             </Link>
-            <Link to="/register" style={registerButtonStyle}>
-              Register
+          )}
+        </nav>
+
+        <div className="flex items-center gap-3">
+          {!isAuthenticated ? (
+            <>
+              <Link
+                to="/login"
+                className="rounded-md px-2 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              >
+                Register
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="rounded-md px-2 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Logout
+            </button>
+          )}
+
+          {isAuthenticated && (
+            <Link
+              to="/cart"
+              className="relative rounded-md bg-gray-100 px-3 py-2 flex items-center text-sm font-medium text-gray-800 hover:bg-gray-200"
+            >
+              <ShoppingCart className="h-4 w-4 mr-1.5" />
+              Cart
+              {getTotalCartItems() > 0 && (
+                <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-semibold text-white">
+                  {getTotalCartItems()}
+                </span>
+              )}
             </Link>
-          </div>
-
-          <Link to="/cart" style={cartButtonStyle}>
-            🛒 Cart
-            {getTotalCartItems() > 0 && (
-              <span style={cartBadgeStyle}>{getTotalCartItems()}</span>
-            )}
-          </Link>
-
-          <Link to="/admin/dashboard" style={adminButtonStyle}>
-            Admin
-          </Link>
+          )}
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

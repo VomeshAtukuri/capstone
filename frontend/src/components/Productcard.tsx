@@ -1,14 +1,13 @@
-"use client";
-
-import type React from "react";
+import { useAuth } from "@/context/auth-context";
 
 interface Product {
-  id: number;
+  productId: number;
   name: string;
   price: number;
-  image: string;
+  imageUrl: string;
   description: string;
   category: string;
+  stock: number;
 }
 
 interface ProductCardProps {
@@ -22,88 +21,39 @@ export default function ProductCard({
   onAddToCart,
   onViewDetails,
 }: ProductCardProps) {
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-card)",
-    borderRadius: "var(--radius-lg)",
-    padding: "1.5rem",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    cursor: "pointer",
-  };
-
-  const imageStyle: React.CSSProperties = {
-    width: "100%",
-    height: "200px",
-    objectFit: "cover",
-    borderRadius: "var(--radius-md)",
-    marginBottom: "1rem",
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: "1.25rem",
-    fontWeight: "600",
-    marginBottom: "0.5rem",
-    color: "var(--color-card-foreground)",
-  };
-
-  const priceStyle: React.CSSProperties = {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    color: "var(--color-primary)",
-    marginBottom: "1rem",
-  };
-
-  const descriptionStyle: React.CSSProperties = {
-    color: "var(--color-muted-foreground)",
-    marginBottom: "1.5rem",
-    lineHeight: "1.5",
-  };
-
-  const buttonGroupStyle: React.CSSProperties = {
-    display: "flex",
-    gap: "0.5rem",
-  };
-
-  const addToCartButtonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-primary)",
-    color: "var(--color-primary-foreground)",
-    border: "none",
-    padding: "0.75rem 1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    flex: 1,
-    fontWeight: "500",
-  };
-
-  const viewButtonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-secondary)",
-    color: "var(--color-secondary-foreground)",
-    border: "none",
-    padding: "0.75rem 1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    flex: 1,
-    fontWeight: "500",
-  };
-
+  const Outofsstock = product.stock === 0;
+  const { isAuthenticated } = useAuth();
   return (
-    <div style={cardStyle}>
+    <div className="group rounded-lg bg-card p-4 shadow-md transition hover:shadow-lg">
       <img
-        src={product.image || "/placeholder.svg"}
+        src={
+          product.imageUrl ||
+          "/placeholder.svg?height=200&width=400&query=product-image"
+        }
         alt={product.name}
-        style={imageStyle}
+        className="mb-3 h-48 w-full rounded-md object-cover"
       />
-      <h3 style={titleStyle}>{product.name}</h3>
-      <p style={priceStyle}>${product.price}</p>
-      <p style={descriptionStyle}>{product.description}</p>
-      <div style={buttonGroupStyle}>
+      <h3 className="mb-1 text-lg font-semibold text-card-foreground">
+        {product.name}
+      </h3>
+      <p className="mb-3 text-xl font-bold text-emerald-600">
+        ₹{product.price}
+      </p>
+      <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+        {product.description}
+      </p>
+      <div className="flex gap-2">
         <button
-          style={addToCartButtonStyle}
-          onClick={() => onAddToCart(product.id)}
+          className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          onClick={() => onAddToCart(product.productId)}
+          disabled={Outofsstock || !isAuthenticated}
         >
           Add to Cart
         </button>
-        <button style={viewButtonStyle} onClick={onViewDetails}>
+        <button
+          className="flex-1 rounded-md bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-500/20"
+          onClick={onViewDetails}
+        >
           View Details
         </button>
       </div>

@@ -1,63 +1,102 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
-import { useProducts } from "@/context/products-context";
+import { useState, useEffect } from "react";
+import {
+  getProducts,
+  addProduct as addProductService,
+  updateProduct as updateProductService,
+  deleteProduct as deleteProductService,
+  type Product,
+} from "@/services/products";
+import { useOrders } from "@/context/orders-context";
+
+const categoriesList = [
+  { id: 1, name: "Electronics" },
+  { id: 2, name: "Clothing" },
+  { id: 3, name: "Home Appliances" },
+  { id: 4, name: "Sports" },
+];
 
 export default function AdminPage() {
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const [products, setProducts] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const token = localStorage.getItem("token") as string;
+  const { orders, updateOrderStatus } = useOrders();
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    category: "",
+    categoryId: "",
     description: "",
-    image: "",
+    imageUrl: "",
     stock: "",
   });
 
-  const categories = ["Electronics", "Clothing", "Home", "Sports"];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const data = await getProducts();
+      setProducts(Array.isArray(data) ? data : []);
+    };
+    fetchProducts();
+  }, []);
+
+  const addProduct = async (productData: any) => {
+    const newProduct = await addProductService(productData, token);
+    setProducts((prev) => [...prev, newProduct]);
+  };
+
+  const updateProduct = async (id: number, productData: Product) => {
+    await updateProductService(id, productData, token);
+    setProducts((prev) =>
+      prev.map((p) => (p.productId === id ? { ...p, ...productData } : p))
+    );
+  };
+
+  const deleteProduct = async (id: number) => {
+    await deleteProductService(id, token);
+    setProducts((prev) => prev.filter((p) => p.productId !== id));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const productData = {
+    const productData: Product = {
       name: formData.name,
       price: Number.parseFloat(formData.price),
-      category: formData.category,
+      categoryId: Number(formData.categoryId),
       description: formData.description,
-      image: formData.image,
-      stock: Number.parseInt(formData.stock),
+      imageUrl: formData.imageUrl,
+      stock: Number.parseInt(formData.stock || "0"),
     };
-
     if (editingProduct) {
-      updateProduct(editingProduct.id, productData);
+      updateProduct(editingProduct.productId, productData);
       setEditingProduct(null);
     } else {
       addProduct(productData);
       setShowAddForm(false);
     }
-
     setFormData({
       name: "",
       price: "",
-      category: "",
+      categoryId: "",
       description: "",
-      image: "",
+      imageUrl: "",
       stock: "",
     });
   };
 
   const handleEdit = (product: any) => {
+    const matchedCategory = categoriesList.find(
+      (c) => c.name === product.categoryName
+    );
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      price: product.price.toString(),
-      category: product.category,
-      description: product.description,
-      image: product.image,
-      stock: product.stock.toString(),
+      price: String(product.price ?? ""),
+      categoryId: String(matchedCategory?.id ?? ""),
+      description: product.description || "",
+      imageUrl: product.imageUrl ?? "",
+      stock: String(product.stock ?? ""),
     });
     setShowAddForm(true);
   };
@@ -68,201 +107,85 @@ export default function AdminPage() {
     setFormData({
       name: "",
       price: "",
-      category: "",
+      categoryId: "",
       description: "",
-      image: "",
+      imageUrl: "",
       stock: "",
     });
   };
 
   const totalProducts = products.length;
-  const totalCategories = new Set(products.map((p) => p.category)).size;
-  const averagePrice =
-    products.reduce((sum, p) => sum + p.price, 0) / products.length;
-  const lowStockProducts = products.filter((p) => p.stock < 10).length;
+  const totalSales = orders.reduce((total, order) => total + order.total, 0); 
+  const totalCategories = new Set(products.map((p) => p.categoryName)).size;
+  const averagePrice = products.length
+    ? products.reduce((sum, p) => sum + (p as any).price, 0) / products.length
+    : 0;
+  const lowStockProducts = products.filter(
+    (p: any) => (p.stock ?? 0) < 10
+  ).length;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f1f5f9",
-        padding: "2rem 1rem",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "2rem",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "2.5rem",
-              fontWeight: "700",
-              color: "#1e293b",
-            }}
-          >
-            Admin Dashboard
-          </h1>
+    <div className="min-h-[calc(100vh-64px)] bg-slate-100 px-4 py-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
           <button
             onClick={() => setShowAddForm(true)}
-            style={{
-              backgroundColor: "#2563eb",
-              color: "white",
-              padding: "0.75rem 1.5rem",
-              borderRadius: "8px",
-              border: "none",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "background-color 0.2s",
-            }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor = "#1d4ed8")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor = "#2563eb")
-            }
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
             Add New Product
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "1.5rem",
-            marginBottom: "2rem",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "1.5rem",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#64748b",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                marginBottom: "0.5rem",
-              }}
-            >
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl bg-white p-4 shadow">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Total Products
             </h3>
-            <p
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                color: "#1e293b",
-              }}
-            >
+            <p className="mt-1 text-2xl font-bold text-slate-900">
               {totalProducts}
             </p>
           </div>
-
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "1.5rem",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#64748b",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                marginBottom: "0.5rem",
-              }}
-            >
+          <div className="rounded-xl bg-white p-4 shadow">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Categories
             </h3>
-            <p
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                color: "#1e293b",
-              }}
-            >
+            <p className="mt-1 text-2xl font-bold text-slate-900">
               {totalCategories}
             </p>
           </div>
-
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "1.5rem",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#64748b",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                marginBottom: "0.5rem",
-              }}
-            >
-              Average Price
+          <div className="rounded-xl bg-white p-4 shadow">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Orders
             </h3>
-            <p
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                color: "#1e293b",
-              }}
-            >
-              ${averagePrice.toFixed(2)}
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              {orders.length}
             </p>
           </div>
-
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "1.5rem",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#64748b",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                marginBottom: "0.5rem",
-              }}
-            >
+          <div className="rounded-xl bg-white p-4 shadow">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Total Sales
+            </h3>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              ₹{totalSales.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Average Price
+            </h3>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              ₹{averagePrice.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-xl bg-white p-4 shadow">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Low Stock Items
             </h3>
             <p
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                color: lowStockProducts > 0 ? "#dc2626" : "#1e293b",
-              }}
+              className={`mt-1 text-2xl font-bold ${
+                lowStockProducts > 0 ? "text-red-600" : "text-slate-900"
+              }`}
             >
               {lowStockProducts}
             </p>
@@ -270,214 +193,87 @@ export default function AdminPage() {
         </div>
 
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: showAddForm ? "1fr 400px" : "1fr",
-            gap: "2rem",
-          }}
+          className={`grid gap-6 ${
+            showAddForm ? "lg:grid-cols-[1fr_380px]" : "lg:grid-cols-1"
+          }`}
         >
-          {/* Products Table */}
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                padding: "1.5rem",
-                borderBottom: "1px solid #e2e8f0",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "600",
-                  color: "#1e293b",
-                }}
-              >
+          <div className="overflow-hidden rounded-xl bg-white shadow">
+            <div className="border-b border-slate-200 p-4">
+              <h2 className="text-xl font-semibold text-slate-900">
                 Products ({products.length})
               </h2>
             </div>
-
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                }}
-              >
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr style={{ backgroundColor: "#f8fafc" }}>
-                    <th
-                      style={{
-                        padding: "1rem",
-                        textAlign: "left",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        color: "#374151",
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
+                  <tr className="bg-slate-50 text-left">
+                    <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">
                       Product
                     </th>
-                    <th
-                      style={{
-                        padding: "1rem",
-                        textAlign: "left",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        color: "#374151",
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
+                    <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">
                       Category
                     </th>
-                    <th
-                      style={{
-                        padding: "1rem",
-                        textAlign: "left",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        color: "#374151",
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
+                    <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">
                       Price
                     </th>
-                    <th
-                      style={{
-                        padding: "1rem",
-                        textAlign: "left",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        color: "#374151",
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
+                    <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">
                       Stock
                     </th>
-                    <th
-                      style={{
-                        padding: "1rem",
-                        textAlign: "left",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        color: "#374151",
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
+                    <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {products.map((product: any) => (
                     <tr
-                      key={product.id}
-                      style={{
-                        borderBottom: "1px solid #f1f5f9",
-                      }}
+                      key={product.productId}
+                      className="border-b border-slate-100"
                     >
-                      <td style={{ padding: "1rem" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.75rem",
-                          }}
-                        >
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
                           <img
-                            src={product.image || "/placeholder.svg"}
+                            src={
+                              product.imageUrl ||
+                              "/placeholder.svg?height=50&width=50&query=product"
+                            }
                             alt={product.name}
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              objectFit: "cover",
-                              borderRadius: "8px",
-                            }}
+                            className="h-12 w-12 rounded-md object-cover"
                           />
                           <div>
-                            <p
-                              style={{
-                                fontWeight: "600",
-                                color: "#1e293b",
-                                marginBottom: "0.25rem",
-                              }}
-                            >
+                            <p className="font-semibold text-slate-900">
                               {product.name}
                             </p>
-                            <p
-                              style={{
-                                fontSize: "0.875rem",
-                                color: "#64748b",
-                              }}
-                            >
-                              ID: {product.id}
+                            <p className="text-xs text-slate-500">
+                              ID: {product.productId}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: "1rem" }}>
-                        <span
-                          style={{
-                            backgroundColor: "#e0f2fe",
-                            color: "#0369a1",
-                            padding: "0.25rem 0.75rem",
-                            borderRadius: "12px",
-                            fontSize: "0.875rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          {product.category}
+                      <td className="p-3">
+                        <span className="rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-800">
+                          {product.categoryName}
                         </span>
                       </td>
-                      <td style={{ padding: "1rem" }}>
+                      <td className="p-3 font-semibold text-slate-900">
+                        ₹{Number(product.price).toFixed(2)}
+                      </td>
+                      <td className="p-3 font-semibold">
                         <span
-                          style={{
-                            fontSize: "1rem",
-                            fontWeight: "600",
-                            color: "#1e293b",
-                          }}
+                          className={`${
+                            (product.stock ?? 0) < 10
+                              ? "text-red-600"
+                              : "text-emerald-600"
+                          }`}
                         >
-                          ${product.price.toFixed(2)}
+                          {product.stock ?? 0}
                         </span>
                       </td>
-                      <td style={{ padding: "1rem" }}>
-                        <span
-                          style={{
-                            color: product.stock < 10 ? "#dc2626" : "#059669",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {product.stock}
-                        </span>
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <td className="p-3">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleEdit(product)}
-                            style={{
-                              backgroundColor: "#f59e0b",
-                              color: "white",
-                              padding: "0.5rem 1rem",
-                              borderRadius: "6px",
-                              border: "none",
-                              fontSize: "0.875rem",
-                              fontWeight: "500",
-                              cursor: "pointer",
-                              transition: "background-color 0.2s",
-                            }}
-                            onMouseOver={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "#d97706")
-                            }
-                            onMouseOut={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "#f59e0b")
-                            }
+                            className="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
                           >
                             Edit
                           </button>
@@ -488,28 +284,10 @@ export default function AdminPage() {
                                   "Are you sure you want to delete this product?"
                                 )
                               ) {
-                                deleteProduct(product.id);
+                                deleteProduct(product.productId);
                               }
                             }}
-                            style={{
-                              backgroundColor: "#dc2626",
-                              color: "white",
-                              padding: "0.5rem 1rem",
-                              borderRadius: "6px",
-                              border: "none",
-                              fontSize: "0.875rem",
-                              fontWeight: "500",
-                              cursor: "pointer",
-                              transition: "background-color 0.2s",
-                            }}
-                            onMouseOver={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "#b91c1c")
-                            }
-                            onMouseOut={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "#dc2626")
-                            }
+                            className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
                           >
                             Delete
                           </button>
@@ -522,39 +300,14 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Add/Edit Form */}
           {showAddForm && (
-            <div
-              style={{
-                backgroundColor: "white",
-                borderRadius: "12px",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                padding: "1.5rem",
-                height: "fit-content",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "1.25rem",
-                  fontWeight: "600",
-                  color: "#1e293b",
-                  marginBottom: "1.5rem",
-                }}
-              >
+            <div className="h-max rounded-xl bg-white p-4 shadow">
+              <h3 className="mb-4 text-lg font-semibold text-slate-900">
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h3>
-
-              <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Product Name
                   </label>
                   <input
@@ -564,26 +317,11 @@ export default function AdminPage() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     required
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                    }}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
-                <div style={{ marginBottom: "1rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Price ($)
                   </label>
                   <input
@@ -594,61 +332,31 @@ export default function AdminPage() {
                       setFormData({ ...formData, price: e.target.value })
                     }
                     required
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                    }}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
-                <div style={{ marginBottom: "1rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Category
                   </label>
                   <select
-                    value={formData.category}
+                    value={formData.categoryId}
                     onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
+                      setFormData({ ...formData, categoryId: e.target.value })
                     }
                     required
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                    }}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
                   >
                     <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
+                    {categoriesList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
                       </option>
                     ))}
                   </select>
                 </div>
-
-                <div style={{ marginBottom: "1rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Stock Quantity
                   </label>
                   <input
@@ -658,117 +366,48 @@ export default function AdminPage() {
                       setFormData({ ...formData, stock: e.target.value })
                     }
                     required
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                    }}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
-                <div style={{ marginBottom: "1rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Image URL
                   </label>
                   <input
                     type="url"
-                    value={formData.image}
+                    value={formData.imageUrl}
                     onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
+                      setFormData({ ...formData, imageUrl: e.target.value })
                     }
                     required
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                    }}
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
-                <div style={{ marginBottom: "1.5rem" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Description
                   </label>
                   <textarea
+                    rows={3}
                     value={formData.description}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
                     required
-                    rows={3}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                      resize: "vertical",
-                    }}
+                    className="w-full resize-y rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
-                <div style={{ display: "flex", gap: "0.75rem" }}>
+                <div className="flex gap-2">
                   <button
                     type="submit"
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#2563eb",
-                      color: "white",
-                      padding: "0.75rem",
-                      borderRadius: "6px",
-                      border: "none",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#1d4ed8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#2563eb")
-                    }
+                    className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                   >
                     {editingProduct ? "Update Product" : "Add Product"}
                   </button>
                   <button
                     type="button"
                     onClick={handleCancel}
-                    style={{
-                      backgroundColor: "#6b7280",
-                      color: "white",
-                      padding: "0.75rem 1rem",
-                      borderRadius: "6px",
-                      border: "none",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#4b5563")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#6b7280")
-                    }
+                    className="rounded-md bg-slate-500 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-600"
                   >
                     Cancel
                   </button>
@@ -776,6 +415,68 @@ export default function AdminPage() {
               </form>
             </div>
           )}
+        </div>
+
+        <div className="mt-8 overflow-hidden rounded-xl bg-white shadow">
+          <div className="border-b border-slate-200 p-4">
+            <h2 className="text-xl font-semibold text-slate-900">Order Management ({orders.length})</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Update order statuses. Changes are saved to client state for demo purposes.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-left">
+                  <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">Order ID</th>
+                  <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">Items</th>
+                  <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">Date</th>
+                  <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">Total</th>
+                  <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">Status</th>
+                  <th className="border-b border-slate-200 p-3 font-semibold text-slate-700">Update</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((o) => (
+                  <tr key={o.id} className="border-b border-slate-100">
+                    <td className="p-3">{`#order ${o.id}`}</td>
+                    <td className="p-3">
+                        <p className="text-xs text-slate-500">{o.items.length} item(s)</p>
+                    </td>
+                    <td className="p-3">{o.date.split("T")[0] + " " + o.date.split("T")[1]}</td>
+                    <td className="p-3 font-semibold text-slate-900">₹{o.total.toFixed(2)}</td>
+                    <td className="p-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${
+                          o.status === "delivered"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : o.status === "shipped"
+                              ? "bg-blue-100 text-blue-800"
+                              : o.status === "processing"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-slate-100 text-slate-800"
+                        }`}
+                      >
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <select
+                        defaultValue={o.status}
+                        onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-blue-300"
+                      >
+                        <option value="pending">pending</option>
+                        <option value="processing">processing</option>
+                        <option value="shipped">shipped</option>
+                        <option value="delivered">delivered</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

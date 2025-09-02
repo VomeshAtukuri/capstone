@@ -1,144 +1,98 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
-import Navigation from "@/components/Navbar";
+import { useState, useEffect } from "react";
 import ProductCard from "@/components/Productcard";
-import { useProducts } from "@/context/products-context";
 import { useCart } from "@/context/cart-context";
+import { useNavigate } from "react-router";
+import { getProducts } from "@/services/products";
+import Loading from "@/components/Loading";
+import { useAuth } from "@/context/auth-context";
+type Product = {
+  productId: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+  categoryName: string;
+};
 
 export default function ProductsPage() {
-  const { products } = useProducts();
-  const { addToCart } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+ const { addToCart } = isAuthenticated
+    ? useCart()
+    : { addToCart: () => {} };
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const router = useNavigate();
 
-  const getFilteredProducts = () => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  };
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      const productsData = await getProducts();
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
-  const getCategories = () => {
-    const categories = [
-      "All",
-      ...new Set(products.map((product) => product.category)),
-    ];
-    return categories;
-  };
+  const categories = [
+    "All",
+    ...Array.from(new Set(products.map((p) => p.categoryName))),
+  ];
 
-  const filteredProducts = getFilteredProducts();
-
-  const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    backgroundColor: "var(--color-background)",
-  };
-
-  const contentStyle: React.CSSProperties = {
-    padding: "2rem 1rem",
-    maxWidth: "1200px",
-    margin: "0 auto",
-  };
-
-  const headerStyle: React.CSSProperties = {
-    marginBottom: "2rem",
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: "2.5rem",
-    fontWeight: "bold",
-    marginBottom: "1rem",
-    color: "var(--color-foreground)",
-  };
-
-  const filtersStyle: React.CSSProperties = {
-    display: "flex",
-    gap: "1rem",
-    marginBottom: "2rem",
-    flexWrap: "wrap",
-    alignItems: "center",
-  };
-
-  const searchInputStyle: React.CSSProperties = {
-    padding: "0.75rem",
-    border: "1px solid var(--color-border)",
-    borderRadius: "var(--radius-md)",
-    fontSize: "1rem",
-    minWidth: "300px",
-    backgroundColor: "var(--color-input)",
-  };
-
-  const selectStyle: React.CSSProperties = {
-    padding: "0.75rem",
-    border: "1px solid var(--color-border)",
-    borderRadius: "var(--radius-md)",
-    fontSize: "1rem",
-    backgroundColor: "var(--color-input)",
-    cursor: "pointer",
-  };
-
-  const productsGridStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "2rem",
-  };
-
-  const noResultsStyle: React.CSSProperties = {
-    textAlign: "center",
-    padding: "3rem",
-    color: "var(--color-muted-foreground)",
-    fontSize: "1.1rem",
-  };
+  const filtered = products.filter((p) => {
+    const q = searchTerm.toLowerCase();
+    const name = typeof p.name === "string" ? p.name : "";
+    const matchesSearch = name.toLowerCase().includes(q);
+    const matchesCat =
+      selectedCategory === "All" || p.categoryName === selectedCategory;
+    return matchesSearch && matchesCat;
+  });
 
   return (
-    <div style={pageStyle}>
-      <Navigation />
-      <div style={contentStyle}>
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>Our Products</h1>
+    <div className="min-h-[calc(100vh-64px)] bg-background">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">Our Products</h1>
+        </header>
 
-          <div style={filtersStyle}>
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={searchInputStyle}
-            />
-
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              style={selectStyle}
-            >
-              {getCategories().map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="mb-8 flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="min-w-[280px] flex-1 rounded-md border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="rounded-md border border-border bg-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {filteredProducts.length === 0 ? (
-          <div style={noResultsStyle}>
-            No products found matching your criteria.
+        {loading ? (
+          <Loading message="products..."/>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-lg bg-card p-8 text-center text-muted-foreground shadow">
+            No products found.
           </div>
         ) : (
-          <div style={productsGridStyle}>
-            {filteredProducts.map((product) => (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((product) => (
               <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-                onViewDetails={() =>
-                  (window.location.href = `/products/${product.id}`)
-                }
+                key={product.productId}
+                product={product as any}
+                onAddToCart={(id) => addToCart(id)}
+                onViewDetails={() => router(`/products/${product.productId}`)}
               />
             ))}
           </div>

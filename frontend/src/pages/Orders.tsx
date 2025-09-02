@@ -1,152 +1,62 @@
-"use client";
-
+import { Link } from "react-router-dom";
 import { useOrders } from "@/context/orders-context";
+import Loading from "@/components/Loading";
+import { useEffect } from "react";
+
+const statusStyles: Record<string, string> = {
+  pending: "bg-amber-500",
+  processing: "bg-blue-500",
+  shipped: "bg-violet-500",
+  delivered: "bg-emerald-600",
+};
 
 export default function OrdersPage() {
-  const { orders } = useOrders();
+  const { orders, loading, refreshOrders } = useOrders();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "#f59e0b";
-      case "processing":
-        return "#3b82f6";
-      case "shipped":
-        return "#8b5cf6";
-      case "delivered":
-        return "#10b981";
-      default:
-        return "#6b7280";
-    }
-  };
+  useEffect(() => {
+    refreshOrders();
+  }, []);
 
-  const getStatusText = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
+  if (loading && orders.length === 0) {
+    return <Loading message="your orders.." />;
+  }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        padding: "2rem 1rem",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "2.5rem",
-            fontWeight: "700",
-            color: "#1e293b",
-            marginBottom: "2rem",
-            textAlign: "center",
-          }}
-        >
+    <div className="min-h-[calc(100vh-64px)] bg-slate-50 px-4 py-8">
+      <div className="mx-auto max-w-6xl">
+        <h1 className="mb-8 text-center text-3xl font-bold text-slate-900">
           Your Orders
         </h1>
 
         {orders.length === 0 ? (
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "3rem",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              textAlign: "center",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "1.5rem",
-                color: "#64748b",
-                marginBottom: "1rem",
-              }}
-            >
+          <div className="rounded-xl bg-white p-10 text-center shadow">
+            <h2 className="mb-2 text-lg font-semibold text-slate-600">
               No orders yet
             </h2>
-            <p
-              style={{
-                color: "#94a3b8",
-                marginBottom: "2rem",
-              }}
-            >
+            <p className="mb-6 text-slate-400">
               Start shopping to see your orders here
             </p>
-            <a
-              href="/products"
-              style={{
-                display: "inline-block",
-                backgroundColor: "#2563eb",
-                color: "white",
-                padding: "0.75rem 2rem",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: "600",
-                transition: "background-color 0.2s",
-              }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.backgroundColor = "#1d4ed8")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.backgroundColor = "#2563eb")
-              }
+            <Link
+              to="/products"
+              className="inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
             >
               Start Shopping
-            </a>
+            </Link>
           </div>
         ) : (
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
-          >
+          <div className="flex flex-col gap-4">
             {orders.map((order) => (
               <div
                 key={order.id}
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  overflow: "hidden",
-                }}
+                className="overflow-hidden rounded-xl bg-white shadow"
               >
-                {/* Order Header */}
-                <div
-                  style={{
-                    backgroundColor: "#f1f5f9",
-                    padding: "1.5rem",
-                    borderBottom: "1px solid #e2e8f0",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: "1rem",
-                    }}
-                  >
+                <div className="border-b border-slate-200 bg-slate-100 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3
-                        style={{
-                          fontSize: "1.25rem",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                          marginBottom: "0.25rem",
-                        }}
-                      >
+                      <h3 className="mb-0.5 text-lg font-semibold text-slate-900">
                         Order {order.id}
                       </h3>
-                      <p
-                        style={{
-                          color: "#64748b",
-                          fontSize: "0.875rem",
-                        }}
-                      >
+                      <p className="text-xs text-slate-500">
                         Placed on{" "}
                         {new Date(order.date).toLocaleDateString("en-US", {
                           year: "numeric",
@@ -155,101 +65,48 @@ export default function OrdersPage() {
                         })}
                       </p>
                     </div>
-                    <div style={{ textAlign: "right" }}>
+                    <div className="text-right">
                       <div
-                        style={{
-                          display: "inline-block",
-                          backgroundColor: getStatusColor(order.status),
-                          color: "white",
-                          padding: "0.5rem 1rem",
-                          borderRadius: "20px",
-                          fontSize: "0.875rem",
-                          fontWeight: "600",
-                          marginBottom: "0.5rem",
-                        }}
+                        className={`mb-1 inline-block rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                          statusStyles[order.status] ?? "bg-slate-500"
+                        }`}
                       >
-                        {getStatusText(order.status)}
+                        {order.status.charAt(0).toUpperCase() +
+                          order.status.slice(1)}
                       </div>
-                      <p
-                        style={{
-                          fontSize: "1.25rem",
-                          fontWeight: "700",
-                          color: "#1e293b",
-                        }}
-                      >
+                      <p className="text-lg font-bold text-slate-900">
                         ${order.total.toFixed(2)}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Order Items */}
-                <div style={{ padding: "1.5rem" }}>
-                  <h4
-                    style={{
-                      fontSize: "1.125rem",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                      marginBottom: "1rem",
-                    }}
-                  >
+                <div className="p-4">
+                  <h4 className="mb-3 text-base font-semibold text-slate-900">
                     Items ({order.items.length})
                   </h4>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "1rem",
-                    }}
-                  >
+                  <div className="flex flex-col gap-3">
                     {order.items.map((item) => (
                       <div
-                        key={item.id}
-                        style={{
-                          display: "flex",
-                          gap: "1rem",
-                          padding: "1rem",
-                          backgroundColor: "#f8fafc",
-                          borderRadius: "8px",
-                        }}
+                        key={item.productId}
+                        className="flex gap-3 rounded-lg bg-slate-50 p-3"
                       >
                         <img
-                          src={item.image || "/placeholder.svg"}
+                          src={
+                            item.imageUrl ||
+                            "/placeholder.svg?height=80&width=80&query=order-item"
+                          }
                           alt={item.name}
-                          style={{
-                            width: "80px",
-                            height: "80px",
-                            objectFit: "cover",
-                            borderRadius: "8px",
-                          }}
+                          className="h-20 w-20 rounded-md object-cover"
                         />
-                        <div style={{ flex: 1 }}>
-                          <h5
-                            style={{
-                              fontSize: "1rem",
-                              fontWeight: "600",
-                              color: "#1e293b",
-                              marginBottom: "0.25rem",
-                            }}
-                          >
+                        <div className="flex-1">
+                          <h5 className="text-sm font-semibold text-slate-900">
                             {item.name}
                           </h5>
-                          <p
-                            style={{
-                              color: "#64748b",
-                              fontSize: "0.875rem",
-                              marginBottom: "0.5rem",
-                            }}
-                          >
+                          <p className="text-xs text-slate-500">
                             Quantity: {item.quantity}
                           </p>
-                          <p
-                            style={{
-                              fontSize: "1.125rem",
-                              fontWeight: "600",
-                              color: "#2563eb",
-                            }}
-                          >
+                          <p className="text-sm font-semibold text-blue-600">
                             ${item.price.toFixed(2)}
                           </p>
                         </div>
@@ -258,37 +115,16 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                {/* Shipping Address */}
-                <div
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    padding: "1.5rem",
-                    borderTop: "1px solid #e2e8f0",
-                  }}
-                >
-                  <h4
-                    style={{
-                      fontSize: "1rem",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div className="border-t border-slate-200 bg-slate-50 p-4">
+                  <h4 className="mb-1 text-sm font-semibold text-slate-900">
                     Shipping Address
                   </h4>
-                  <p
-                    style={{
-                      color: "#64748b",
-                      fontSize: "0.875rem",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    {order.shippingAddress.fullName}
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    {order.address.fullName}
                     <br />
-                    {order.shippingAddress.address}
+                    {order.address.addressLine1}
                     <br />
-                    {order.shippingAddress.city},{" "}
-                    {order.shippingAddress.zipCode}
+                    {order.address.city}, {order.address.zipCode}
                   </p>
                 </div>
               </div>

@@ -2,7 +2,7 @@ export default function Footer() {
   const styles = {
     container: {
       width: "100%",
-      backgroundColor: "#333333", // matches secondary color
+      backgroundColor: "#333333", 
       color: "white",
       padding: "20px 24px",
       marginTop: "auto",

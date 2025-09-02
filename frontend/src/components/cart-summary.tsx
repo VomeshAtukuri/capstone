@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
 interface CartSummaryProps {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-  onCheckout?: () => void;
-  showCheckoutButton?: boolean;
+  subtotal: number
+  shipping: number
+  tax: number
+  total: number
+  onCheckout?: () => void
+  showCheckoutButton?: boolean
 }
 
 export default function CartSummary({
@@ -24,7 +24,7 @@ export default function CartSummary({
     justifyContent: "space-between",
     marginBottom: "0.75rem",
     fontSize: "1rem",
-  };
+  }
 
   const totalRowStyle: React.CSSProperties = {
     display: "flex",
@@ -35,7 +35,7 @@ export default function CartSummary({
     fontSize: "1.25rem",
     fontWeight: "bold",
     color: "var(--color-primary)",
-  };
+  }
 
   const checkoutButtonStyle: React.CSSProperties = {
     backgroundColor: "var(--color-primary)",
@@ -48,18 +48,18 @@ export default function CartSummary({
     fontWeight: "600",
     width: "100%",
     marginTop: "1.5rem",
-  };
+  }
 
   const freeShippingStyle: React.CSSProperties = {
     color: "var(--color-primary)",
     fontWeight: "500",
-  };
+  }
 
   return (
     <div>
       <div style={summaryRowStyle}>
         <span>Subtotal:</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>₹{subtotal.toFixed(2)}</span>
       </div>
 
       <div style={summaryRowStyle}>
@@ -71,12 +71,12 @@ export default function CartSummary({
 
       <div style={summaryRowStyle}>
         <span>Tax:</span>
-        <span>${tax.toFixed(2)}</span>
+        <span>₹{tax.toFixed(2)}</span>
       </div>
 
       <div style={totalRowStyle}>
         <span>Total:</span>
-        <span>${total.toFixed(2)}</span>
+        <span>₹{total.toFixed(2)}</span>
       </div>
 
       {shipping === 0 && subtotal > 100 && (
@@ -98,5 +98,5 @@ export default function CartSummary({
         </button>
       )}
     </div>
-  );
+  )
 }

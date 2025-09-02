@@ -3,12 +3,12 @@
 import type React from "react";
 
 interface Product {
-  id: number;
+  productId: number;
   name: string;
   price: number;
-  image: string;
+  imageUrl: string;
   description: string;
-  category: string;
+  categoryName: string;
 }
 
 interface CartItemProps {
@@ -19,7 +19,7 @@ interface CartItemProps {
 }
 
 export default function CartItem({
-  product,
+  product ,
   quantity,
   onUpdateQuantity,
   onRemove,
@@ -111,14 +111,14 @@ export default function CartItem({
   return (
     <div style={itemStyle}>
       <img
-        src={product.image || "/placeholder.svg"}
+        src={product.imageUrl}
         alt={product.name}
         style={imageStyle}
       />
 
       <div style={detailsStyle}>
         <h3 style={nameStyle}>{product.name}</h3>
-        <p style={priceStyle}>${product.price} each</p>
+        <p style={priceStyle}>₹{product.price} each</p>
 
         <div style={quantityControlsStyle}>
           <button
@@ -151,7 +151,7 @@ export default function CartItem({
 
       <div style={totalStyle}>
         <div style={itemTotalStyle}>
-          ${(product.price * quantity).toFixed(2)}
+          ₹{(product.price * quantity).toFixed(2)}
         </div>
       </div>
     </div>

@@ -1,97 +1,142 @@
-"use client";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import axios from "axios";
+import { toast } from "sonner";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
-
+interface OrderItem {
+  productId: number;
+  imageUrl: string;
+  name: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+interface Address {
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
 interface Order {
-  id: string;
-  date: string;
+  id: number;
+  status: string;
   total: number;
-  status: "pending" | "processing" | "shipped" | "delivered";
-  items: Array<{
-    id: number;
-    name: string;
-    price: number;
-    quantity: number;
-    image: string;
-  }>;
-  shippingAddress: {
-    fullName: string;
-    address: string;
-    city: string;
-    zipCode: string;
-  };
+  date: string;
+  items: OrderItem[];
+  address: Address;
 }
 
 interface OrdersContextType {
   orders: Order[];
-  addOrder: (order: Omit<Order, "id">) => void;
+  loading: boolean;
+  refreshOrders: () => Promise<void>;
+  updateOrderStatus: (orderId: number, status: string) => Promise<void>;
 }
 
 const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
-export function OrdersProvider({ children }: { children: ReactNode }) {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD-001",
-      date: "2024-01-15",
-      total: 299.99,
-      status: "delivered",
-      items: [
-        {
-          id: 1,
-          name: "Wireless Headphones",
-          price: 299.99,
-          quantity: 1,
-          image: "/wireless-headphones.png",
+export function OrdersProvider({
+  children,
+  isAuthenticated,
+}: {
+  children: ReactNode;
+  isAuthenticated: boolean;
+}) {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const token = localStorage.getItem("token") || "";
+  const fetchOrders = async () => {
+    if (!isAuthenticated || !token) {
+      setOrders([]);
+      return;
+    }
+    if (orders.length === 0) {
+      setLoading(true);
+    }
+    try {
+      const res = await axios.get("http://localhost:5273/api/orders", {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      ],
-      shippingAddress: {
-        fullName: "John Doe",
-        address: "123 Main St",
-        city: "New York",
-        zipCode: "10001",
-      },
-    },
-    {
-      id: "ORD-002",
-      date: "2024-01-20",
-      total: 449.98,
-      status: "shipped",
-      items: [
-        {
-          id: 2,
-          name: "Smart Watch",
-          price: 199.99,
-          quantity: 1,
-          image: "/smartwatch-lifestyle.png",
-        },
-        {
-          id: 4,
-          name: "Running Shoes",
-          price: 249.99,
-          quantity: 1,
-          image: "/running-shoes-on-track.png",
-        },
-      ],
-      shippingAddress: {
-        fullName: "John Doe",
-        address: "123 Main St",
-        city: "New York",
-        zipCode: "10001",
-      },
-    },
-  ]);
+      });
 
-  const addOrder = (order: Omit<Order, "id">) => {
-    const newOrder = {
-      ...order,
-      id: `ORD-${String(orders.length + 1).padStart(3, "0")}`,
-    };
-    setOrders((prev) => [newOrder, ...prev]);
+      const data = res.data;
+      console.log("orders", data);
+
+      const mapped: Order[] = data.map((o: any) => ({
+        id: o.orderId,
+        status: o.status?.toLowerCase() ?? "unknown",
+        total: o.totalAmount,
+        date:
+          typeof o.createdAt === "string"
+            ? o.createdAt
+            : new Date(o.createdAt).toISOString(),
+        items: Array.isArray(o.items)
+          ? o.items.map((i: any) => ({
+              productId: i.productId,
+              name: i.name,
+              imageUrl: i.imageUrl,
+              price: i.price,
+              quantity: i.quantity,
+              subtotal: i.subtotal,
+            }))
+          : [],
+        address: {
+          fullName: o.address?.fullName,
+          phone: o.address?.phone,
+          addressLine1: o.address?.addressLine1,
+          city: o.address?.city,
+          state: o.address?.state,
+          zipCode: o.address?.zipCode,
+          country: o.address?.country,
+        },
+      }));
+
+      setOrders(mapped);
+    } catch (err) {
+      console.error("Failed to fetch orders", err);
+    } finally {
+      setLoading(false);
+    }
   };
+  
+  const updateOrderStatus = async (orderId: number, status: string) => {
+    try {
+      await axios.put(`http://localhost:5273/api/orders/${orderId}/status`, {
+        status,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("Order status updated successfully!");
+      fetchOrders();
+    } catch (err) {
+      console.error("Failed to update order status", err);
+    }
+  }
+
+  useEffect(() => {
+    fetchOrders();
+  }, [isAuthenticated, token]);
 
   return (
-    <OrdersContext.Provider value={{ orders, addOrder }}>
+    <OrdersContext.Provider
+      value={{
+        orders,
+        loading,
+        refreshOrders: fetchOrders,
+        updateOrderStatus
+      }}
+    >
       {children}
     </OrdersContext.Provider>
   );
@@ -99,7 +144,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
 export function useOrders() {
   const context = useContext(OrdersContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useOrders must be used within an OrdersProvider");
   }
   return context;

@@ -1,234 +1,147 @@
 "use client";
+type Product = {
+  productId: number;
+  name: string;
+  price: number;
+  imageUrl: string;
+  description: string;
+  categoryName: string;
+  stock: number;
+};
 
-import type React from "react";
-import { useParams } from "react-router-dom";
-
-import { Link } from "react-router";
-import Navigation from "@/components/Navbar";
-import { useProducts } from "@/context/products-context";
+import { Link } from "react-router-dom";
+import { useParams } from "react-router";
+import { getProductbyid } from "@/services/products";
+import { useState, useEffect } from "react";
 import { useCart } from "@/context/cart-context";
+import Loading from "@/components/Loading";
+import { useAuth } from "@/context/auth-context";
+import { toast } from "sonner";
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const productId = Number(params.id);
-  const { getProductById } = useProducts();
-  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { addToCart } = isAuthenticated
+    ? useCart()
+    : { addToCart: () => {} };
 
-  const product = getProductById(productId);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      const product = await getProductbyid(productId);
+      setProduct(product);
+      setLoading(false);
+    };
+    fetchProduct();
+  }, [productId]);
+
+  if (loading) {
+    return <Loading message="product.." />;
+  }
 
   if (!product) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "var(--color-background)",
-        }}
-      >
-        <Navigation />
-        <div style={{ padding: "2rem", textAlign: "center" }}>
-          <h2>Product not found</h2>
-          <Link to="/products">Back to Products</Link>
+      <div className="min-h-[calc(100vh-64px)] bg-background">
+        <div className="mx-auto max-w-6xl px-4 py-10 text-center">
+          <h2 className="mb-3 text-xl font-semibold text-foreground">
+            Product not found
+          </h2>
+          <Link
+            to="/products"
+            className="text-sm text-emerald-700 hover:underline"
+          >
+            Back to Products
+          </Link>
         </div>
       </div>
     );
   }
 
-  const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    backgroundColor: "var(--color-background)",
-  };
-
-  const contentStyle: React.CSSProperties = {
-    padding: "2rem 1rem",
-    maxWidth: "1200px",
-    margin: "0 auto",
-  };
-
-  const breadcrumbStyle: React.CSSProperties = {
-    marginBottom: "2rem",
-    color: "var(--color-muted-foreground)",
-  };
-
-  const breadcrumbLinkStyle: React.CSSProperties = {
-    color: "var(--color-primary)",
-    textDecoration: "none",
-  };
-
-  const productLayoutStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "3rem",
-    alignItems: "start",
-  };
-
-  const imageContainerStyle: React.CSSProperties = {
-    position: "relative",
-  };
-
-  const mainImageStyle: React.CSSProperties = {
-    width: "100%",
-    height: "400px",
-    objectFit: "cover",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-  };
-
-  const productInfoStyle: React.CSSProperties = {
-    padding: "1rem 0",
-  };
-
-  const categoryBadgeStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-muted)",
-    color: "var(--color-muted-foreground)",
-    padding: "0.25rem 0.75rem",
-    borderRadius: "var(--radius-sm)",
-    fontSize: "0.875rem",
-    marginBottom: "1rem",
-    display: "inline-block",
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: "2.5rem",
-    fontWeight: "bold",
-    marginBottom: "1rem",
-    color: "var(--color-foreground)",
-  };
-
-  const priceStyle: React.CSSProperties = {
-    fontSize: "2rem",
-    fontWeight: "bold",
-    color: "var(--color-primary)",
-    marginBottom: "1.5rem",
-  };
-
-  const descriptionStyle: React.CSSProperties = {
-    fontSize: "1.1rem",
-    lineHeight: "1.6",
-    color: "var(--color-foreground)",
-    marginBottom: "2rem",
-  };
-
-  const actionButtonsStyle: React.CSSProperties = {
-    display: "flex",
-    gap: "1rem",
-    marginBottom: "2rem",
-  };
-
-  const addToCartButtonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-primary)",
-    color: "var(--color-primary-foreground)",
-    border: "none",
-    padding: "1rem 2rem",
-    fontSize: "1.1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    fontWeight: "600",
-    flex: 1,
-  };
-
-  const backButtonStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-secondary)",
-    color: "var(--color-secondary-foreground)",
-    border: "none",
-    padding: "1rem 2rem",
-    fontSize: "1.1rem",
-    borderRadius: "var(--radius-md)",
-    cursor: "pointer",
-    fontWeight: "600",
-    textDecoration: "none",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
-
-  const featuresStyle: React.CSSProperties = {
-    backgroundColor: "var(--color-card)",
-    padding: "1.5rem",
-    borderRadius: "var(--radius-lg)",
-    marginTop: "2rem",
-  };
-
-  const featuresListStyle: React.CSSProperties = {
-    listStyle: "none",
-    padding: 0,
-    margin: 0,
-  };
-
-  const featureItemStyle: React.CSSProperties = {
-    padding: "0.5rem 0",
-    borderBottom: "1px solid var(--color-border)",
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-  };
-
   const handleAddToCart = () => {
-    addToCart(product.id);
-    alert("Product added to cart!");
+    addToCart(product.productId);
+    toast.success("Product added to cart!");
   };
 
   return (
-    <div style={pageStyle}>
-      <Navigation />
-      <div style={contentStyle}>
-        <div style={breadcrumbStyle}>
-          <Link to="/" style={breadcrumbLinkStyle}>
+    <div className="min-h-[calc(100vh-64px)] bg-background">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <nav className="mb-6 text-sm text-muted-foreground">
+          <Link to="/" className="text-emerald-700 hover:underline">
             Home
-          </Link>
-          {" > "}
-          <Link to="/products" style={breadcrumbLinkStyle}>
+          </Link>{" "}
+          /{" "}
+          <Link to="/products" className="text-emerald-700 hover:underline">
             Products
-          </Link>
-          {" > "}
-          <span>{product.name}</span>
-        </div>
+          </Link>{" "}
+          / <span className="text-foreground">{product.name}</span>
+        </nav>
 
-        <div style={productLayoutStyle}>
-          <div style={imageContainerStyle}>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div>
             <img
-              src={product.image || "/placeholder.svg"}
+              src={
+                product.imageUrl ||
+                "/placeholder.svg?height=400&width=800&query=product"
+              }
               alt={product.name}
-              style={mainImageStyle}
+              className="h-96 w-full rounded-lg object-cover shadow"
             />
           </div>
 
-          <div style={productInfoStyle}>
-            <span style={categoryBadgeStyle}>{product.category}</span>
-            <h1 style={titleStyle}>{product.name}</h1>
-            <div style={priceStyle}>${product.price}</div>
-            <p style={descriptionStyle}>{product.description}</p>
+          <div>
+            <span className="mb-3 inline-block rounded-md bg-muted px-3 py-1 text-sm text-muted-foreground">
+              {product.categoryName}
+            </span>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">
+              {product.name}
+            </h1>
+            <div className="mb-4 text-2xl font-bold text-emerald-600">
+              ₹{product.price}
+            </div>
+            <p className="mb-6 text-base leading-relaxed text-foreground">
+              {product.description}
+            </p>
 
-            <div style={actionButtonsStyle}>
-              <button style={addToCartButtonStyle} onClick={handleAddToCart}>
-                Add to Cart
+            <div className="mb-6 flex gap-3">
+              <button
+                className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white 
+             hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+                onClick={handleAddToCart}
+                disabled={product.stock === 0 || !isAuthenticated}
+              >
+                {product.stock === 0
+                  ? "Out of Stock"
+                  : !isAuthenticated
+                  ? "Login to Buy"
+                  : "Add to Cart"}
               </button>
-              <Link to="/products" style={backButtonStyle}>
+
+              <Link
+                to="/products"
+                className="flex items-center justify-center rounded-md bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/20"
+              >
                 Back to Products
               </Link>
             </div>
 
-            <div style={featuresStyle}>
-              <h3
-                style={{
-                  marginBottom: "1rem",
-                  color: "var(--color-card-foreground)",
-                }}
-              >
+            <div className="rounded-lg bg-card p-4 shadow">
+              <h3 className="mb-3 font-semibold text-card-foreground">
                 Product Features
               </h3>
-              <ul style={featuresListStyle}>
-                <li style={featureItemStyle}>
-                  <span>✓</span> High Quality Materials
+              <ul className="space-y-2 text-sm">
+                <li className="border-b border-border pb-2">
+                  ✓ High Quality Materials
                 </li>
-                <li style={featureItemStyle}>
-                  <span>✓</span> Fast & Free Shipping
+                <li className="border-b border-border pb-2">
+                  ✓ Fast & Free Shipping
                 </li>
-                <li style={featureItemStyle}>
-                  <span>✓</span> 30-Day Return Policy
+                <li className="border-b border-border pb-2">
+                  ✓ 30-Day Return Policy
                 </li>
-                <li style={featureItemStyle}>
-                  <span>✓</span> 1 Year Warranty
-                </li>
+                <li className="">✓ 1 Year Warranty</li>
               </ul>
             </div>
           </div>
