@@ -16,6 +16,7 @@ Features authentication, product management, cart, checkout, orders, payments, a
 
 ## 📂 Project Structure
 
+```bash
 docs/
 ├── API_Documentation.md
 ├── Architecture_Diagram.png
@@ -34,7 +35,7 @@ frontend/
 │ ├── pages/
 │ ├── context/
 │ └── services/
-
+```
 
 
 ## ⚙️ Setup Instructions
