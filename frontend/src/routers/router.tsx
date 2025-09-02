@@ -6,6 +6,7 @@ import AboutPage from "@/pages/About";
 import LoginPage from "@/pages/Login";
 import OrdersPage from "@/pages/Orders";
 import ProductDetailsPage from "@/pages/ProductDetails";
+import OrderConfirmationPage from "@/pages/OrderConfirmation";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { type JSX } from "react";
@@ -27,6 +28,7 @@ export default function AppRoutes(): JSX.Element {
 
         <Route path="/cart" element={<CartPage />} />
         <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         
         <Route path="/admin/dashboard" element={<AdminPage />} />

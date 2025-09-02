@@ -95,7 +95,8 @@ export default function CheckoutPage() {
 
       console.log("Order placed:", orderRes.data);
       clearCart();
-      router("/orders");
+      const orderId = orderRes.data.orderId;
+      router(`/order-confirmation?orderId=${orderId}`);;
     } catch (err) {
       console.error("Checkout failed:", err);
       toast.error("Checkout failed");
@@ -347,7 +348,7 @@ export default function CheckoutPage() {
                   Back to Cart
                 </Link>
                 <button type="submit" style={submitButtonStyle}>
-                  Complete Order
+                  Place Your Order
                 </button>
               </div>
             </form>
