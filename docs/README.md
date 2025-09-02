@@ -3,16 +3,12 @@
 A full-stack e-commerce application with **React (Vite + TypeScript)** frontend and **ASP.NET Core Web API** backend.  
 Features authentication, product management, cart, checkout, orders, payments, and addresses.
 
-
-
 ## 🚀 Tech Stack
 
 - **Frontend**: React + Vite + TypeScript + TailwindCSS
 - **Backend**: ASP.NET Core Web API (C#)
 - **Database**: SQL Server with Entity Framework Core
 - **Auth**: JWT-based authentication
-
-
 
 ## 📂 Project Structure
 
@@ -37,7 +33,6 @@ frontend/
 │ └── services/
 ```
 
-
 ## ⚙️ Setup Instructions
 
 ### 1️⃣ Backend (ASP.NET Core)
@@ -58,7 +53,6 @@ npm install
 npm run dev
 Runs on http://localhost:5173
 ```
-
 
 ## Environment Variables
 
@@ -81,6 +75,10 @@ Runs on http://localhost:5173
 VITE_API_URL=https://localhost:5001/api
 ```
 
+## 🎥 Demo
+
+Watch the demo video of the project here:  
+▶️ [Video Demo](https://drive.google.com/file/d/1sv4oMiL-Vg-wzoPTks3-uYRlp-KOtTIJ/view?usp=sharing)
 
 ## 📖 Features
 
@@ -93,25 +91,24 @@ VITE_API_URL=https://localhost:5001/api
 - 📍 Address Management
 - 📊 Admin Dashboard (View orders, manage products)
 
-
-
 ## 🌐 API Endpoints
 
-| Method | Endpoint            | Description               | Auth      |
-|--------|---------------------|---------------------------|-----------|
-| POST   | `/api/auth/register` | Register a new user       | Public    |
-| POST   | `/api/auth/login`    | Login & get JWT           | Public    |
-| GET    | `/api/product`       | Get all products          | Public    |
-| POST   | `/api/product`       | Create new product        | Admin     |
-| GET    | `/api/cart`          | Get current user cart     | Customer  |
-| POST   | `/api/orders/checkout` | Checkout & create order | Customer  |
-| POST   | `/api/payments`      | Make payment for order    | Customer  |
+| Method | Endpoint               | Description             | Auth     |
+| ------ | ---------------------- | ----------------------- | -------- |
+| POST   | `/api/auth/register`   | Register a new user     | Public   |
+| POST   | `/api/auth/login`      | Login & get JWT         | Public   |
+| GET    | `/api/product`         | Get all products        | Public   |
+| POST   | `/api/product`         | Create new product      | Admin    |
+| GET    | `/api/cart`            | Get current user cart   | Customer |
+| POST   | `/api/orders/checkout` | Checkout & create order | Customer |
+| POST   | `/api/payments`        | Make payment for order  | Customer |
 
 ## 📸 Screenshots
 
 ![Architecture](Architecture_Diagram.png)
 
 ## 🔮 Future Improvements
+
 - Integrate real Stripe/PayPal for payments
 - Implement email notifications
 - Deploy to Azure (Backend) & Vercel/Netlify (Frontend)
