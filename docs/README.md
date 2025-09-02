@@ -3,7 +3,7 @@
 A full-stack e-commerce application with **React (Vite + TypeScript)** frontend and **ASP.NET Core Web API** backend.  
 Features authentication, product management, cart, checkout, orders, payments, and addresses.
 
----
+
 
 ## 🚀 Tech Stack
 
@@ -12,7 +12,7 @@ Features authentication, product management, cart, checkout, orders, payments, a
 - **Database**: SQL Server with Entity Framework Core
 - **Auth**: JWT-based authentication
 
----
+
 
 ## 📂 Project Structure
 
@@ -35,7 +35,7 @@ frontend/
 │ ├── context/
 │ └── services/
 
----
+
 
 ## ⚙️ Setup Instructions
 
@@ -58,7 +58,7 @@ npm run dev
 Runs on http://localhost:5173
 ```
 
----
+
 ## Environment Variables
 
 ### Backend (appsettings.json)
@@ -79,7 +79,7 @@ Runs on http://localhost:5173
 ```bash
 VITE_API_URL=https://localhost:5001/api
 ```
----
+
 
 ## 📖 Features
 
@@ -92,7 +92,7 @@ VITE_API_URL=https://localhost:5001/api
 - 📍 Address Management
 - 📊 Admin Dashboard (View orders, manage products)
 
----
+
 
 ## 🌐 API Endpoints
 
@@ -106,12 +106,10 @@ VITE_API_URL=https://localhost:5001/api
 | POST   | `/api/orders/checkout` | Checkout & create order | Customer  |
 | POST   | `/api/payments`      | Make payment for order    | Customer  |
 
----
 ## 📸 Screenshots
 
-![Architecture](docs/Architecture_Diagram.png)
+![Architecture](Architecture_Diagram.png)
 
----
 ## 🔮 Future Improvements
 - Integrate real Stripe/PayPal for payments
 - Implement email notifications
