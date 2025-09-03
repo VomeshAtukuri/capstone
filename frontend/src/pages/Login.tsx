@@ -51,7 +51,7 @@ export default function LoginPage() {
         <header className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
           <p className="text-sm text-muted-foreground">
-            Sign in to your ShopHub account
+            Sign in to your CapstoneStore account
           </p>
         </header>
 

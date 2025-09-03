@@ -54,7 +54,7 @@ export default function RegisterPage() {
         <header className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Create Account</h1>
           <p className="text-sm text-muted-foreground">
-            Join ShopHub and start shopping
+            Join CapstoneStore and start shopping
           </p>
         </header>
 

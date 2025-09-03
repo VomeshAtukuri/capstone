@@ -38,7 +38,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] py-16 text-center text-white">
         <div className="mx-auto max-w-4xl px-4">
           <h1 className="mb-3 text-4xl font-extrabold tracking-tight md:text-5xl">
-            Welcome to ShopHub
+            Welcome to CapstoneStore
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-base/relaxed opacity-90 md:text-lg">
             Discover amazing products at unbeatable prices

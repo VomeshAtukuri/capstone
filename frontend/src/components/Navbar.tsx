@@ -35,7 +35,7 @@ export default function Navigation() {
           to="/"
           className="flex items-center gap-2 text-xl font-semibold text-gray-900"
         >
-          <span>ShopHub</span>
+          <span>CapstoneStore</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
